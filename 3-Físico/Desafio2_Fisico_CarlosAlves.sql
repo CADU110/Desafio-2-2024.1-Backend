@@ -1,0 +1,117 @@
+-- -------- < DETRAN > --------
+--
+--                    SCRIPT DE CRIACAO (DDL)
+--
+-- Data Criacao ...........: 07/06/2024
+-- Autor(es) ..............: Carlos Eduardo Mota Alves
+-- Banco de Dados .........: MySQL 8.0
+-- Base de Dados (nome) ...: DETRAN
+--
+-- PROJETO => 01 Base de Dados
+--         => 09 Tabelas
+-- 
+-- Ultimas Alteracoes
+--   
+-- ---------------------------------------------------------
+-- BASE DE DADOS
+CREATE DATABASE IF NOT EXISTS DETRAN;
+USE DETRAN;
+
+-- TABELAS
+CREATE TABLE MODELO (
+    codModelo INT(6) AUTO_INCREMENT NOT NULL,
+    nomeModelo VARCHAR(20) NOT NULL,
+    CONSTRAINT MODELO_PK PRIMARY KEY (codModelo) 
+) ENGINE = INNODB AUTO_INCREMENT = 1;
+
+CREATE TABLE CATEGORIA (
+    codCategoria INT(2) AUTO_INCREMENT NOT NULL,
+    nomeCategoria VARCHAR(20) NOT NULL,
+    CONSTRAINT CATEGORIA_PK PRIMARY KEY (codCategoria) 
+) ENGINE = INNODB AUTO_INCREMENT = 1;
+
+CREATE TABLE PROPRIETARIO (
+    cpf CHAR(11) NOT NULL,
+    nome VARCHAR(50) NOT NULL,
+    dtNascimento DATE NOT NULL,
+    bairro VARCHAR(20) NOT NULL,
+    cidade VARCHAR(20) NOT NULL,
+    estado VARCHAR(20) NOT NULL,
+    sexo CHAR(1) NOT NULL,
+    CONSTRAINT PROPRIETARIO_PK PRIMARY KEY (cpf),
+    CONSTRAINT SEXO_CK CHECK (sexo IN ('M', 'F'))
+) ENGINE = INNODB;
+
+CREATE TABLE telefone (
+    cpf CHAR(11) NOT NULL,
+    telefone CHAR(11) NOT NULL,
+    CONSTRAINT telefone_UK UNIQUE (cpf, telefone),
+    CONSTRAINT telefone_PROPRIETARIO_FK FOREIGN KEY (cpf)
+        REFERENCES PROPRIETARIO (cpf)
+        ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE = INNODB;
+
+CREATE TABLE VEICULO (
+    placa CHAR(7) NOT NULL,
+    cor VARCHAR(10) NOT NULL,
+    ano YEAR NOT NULL,
+    chassi CHAR(17) NOT NULL,
+    codModelo INT(6) NOT NULL,
+    codCategoria INT(2) NOT NULL,
+    cpf CHAR(11) NOT NULL,
+    CONSTRAINT VEICULO_PK PRIMARY KEY (placa),
+    CONSTRAINT VEICULO_MODELO_FK FOREIGN KEY (codModelo)
+        REFERENCES MODELO (codModelo)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT VEICULO_CATEGORIA_FK FOREIGN KEY (codCategoria)
+        REFERENCES CATEGORIA (codCategoria)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT VEICULO_PROPRIETARIO_FK FOREIGN KEY (cpf)
+        REFERENCES PROPRIETARIO (cpf)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT VEICULO_UK UNIQUE (chassi)
+) ENGINE = INNODB;
+
+CREATE TABLE AGENTE (
+    matricula INT NOT NULL,
+    nome VARCHAR(50) NOT NULL,
+    dtContratacao DATE NOT NULL,
+    CONSTRAINT AGENTE_PK PRIMARY KEY (matricula)
+) ENGINE = INNODB;
+
+CREATE TABLE TIPOINFRACAO (
+    codInfracao INT AUTO_INCREMENT NOT NULL,
+    tipoInfracao VARCHAR(100) NOT NULL,
+    valor DECIMAL(10, 2) NOT NULL,
+    CONSTRAINT TIPOINFRACAO_PK PRIMARY KEY (codInfracao)
+) ENGINE = INNODB AUTO_INCREMENT = 1;
+
+CREATE TABLE LOCAL (
+    latitude DECIMAL(9, 6) NOT NULL,
+    longitude DECIMAL(9, 6) NOT NULL,
+    velocidadePermitida INT(3),
+    CONSTRAINT LOCAL_PK PRIMARY KEY (latitude, longitude)
+) ENGINE = INNODB;
+
+CREATE TABLE INFRACAO (
+    velocidadeAferida INT(3) NOT NULL,
+    dtHora DATETIME NOT NULL,
+    latitude DECIMAL(9, 6) NOT NULL,
+    longitude DECIMAL(9, 6) NOT NULL,
+    codInfracao INT NOT NULL,
+    matricula INT NOT NULL,
+    placa CHAR(7) NOT NULL,
+    CONSTRAINT INFRACAO_PK PRIMARY KEY (dtHora, placa, codInfracao, longitude, latitude),
+    CONSTRAINT INFRACAO_VEICULO_FK FOREIGN KEY (placa)
+        REFERENCES VEICULO (placa)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT INFRACAO_AGENTE_FK FOREIGN KEY (matricula)
+        REFERENCES AGENTE (matricula)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT INFRACAO_LOCAL_FK FOREIGN KEY (latitude, longitude)
+        REFERENCES LOCAL (latitude, longitude)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT INFRACAO_TIPOINFRACAO_FK FOREIGN KEY (codInfracao)
+        REFERENCES TIPOINFRACAO (codInfracao)
+        ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE = INNODB;
